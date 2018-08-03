@@ -240,3 +240,5 @@ TSWLatexianTemp*
 
 # generated if using elsarticle.cls
 *.spl
+acmart.pdf
+models-src-2018.pdf
