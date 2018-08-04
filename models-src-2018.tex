@@ -9,11 +9,88 @@
 %% For final camera-ready submission, w/ required CCS and ACM Reference
 %\documentclass[sigplan]{acmart}\settopmatter{}
 
+\usepackage{kantlipsum}
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage{hhline}
+\usepackage{caption}
+\usepackage{makecell}
+\usepackage{ragged2e}
+\usepackage{parskip}
+\usepackage{wrapfig}
+\usepackage{array}
+\usepackage{float}
+\usepackage[english]{babel}
+\usepackage{lipsum}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{graphicx}
+\graphicspath{{images/}} 
+\usepackage[linesnumbered,ruled]{algorithm2e}
+\usepackage{courier}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,allcolors=blue}
+\usepackage{listings}
+\lstset{
+    basicstyle=\ttfamily,
+    frame=none, 
+    breaklines=true,
+    numbers=left,
+    xleftmargin=2.5em,
+    framexleftmargin=0em,
+    emphstyle=\textbf,
+    float=t
+}
+\lstdefinestyle{ocl}{
+    emph={
+        context, inv
+    }
+}
+\lstdefinestyle{cbp}{
+    basicstyle=\ttfamily\scriptsize,
+    emph={
+        session, create, of, type,
+        set, to, add, hire
+    }
+}
+\lstdefinestyle{xmi}{
+    basicstyle=\ttfamily\scriptsize,
+    emph={
+        Node, children
+    }
+}
+\lstdefinestyle{xml}{
+    basicstyle=\ttfamily\scriptsize,
+    emph={
+        register, create, add, to, resource,
+        from, eattribute, remove, ereference,
+        set, unset, session, Roy, Jen,
+        Moss, Richmond
+    }
+}
+\lstdefinestyle{java}{
+    basicstyle=\ttfamily\scriptsize,
+    emph={
+        case, $unset$,
+        instanceof, else, if, void,
+        new, UnsetEAttributeEvent,
+        UnsetEReferenceEvent,
+        @override, public, class, extends
+    }
+}
+\lstdefinestyle{eol}{
+    basicstyle=\ttfamily\scriptsize,
+    emph={
+        var, new, for, in, create, set, of, with, type,
+        unset, to, add, remove, delete, register, move,
+        from, position, from, move-within, session, \.
+    }
+}
 
 %% Conference information
 %% Supplied to authors by publisher for camera-ready submission;
 %% use defaults for review submission.
-\acmConference[PL'18]{ACM SIGPLAN Conference on Programming Languages}{January 01--03, 2018}{New York, NY, USA}
+\acmConference[ACM SRC@MODELS'18]{ACM Student Research Competition @ MODELS 2018}{October 14-19, 2018}{Copenhagen, Denmark}
 \acmYear{2018}
 \acmISBN{} % \acmISBN{978-x-xxxx-xxxx-x/YY/MM}
 \acmDOI{} % \acmDOI{10.1145/nnnnnnn.nnnnnnn}
@@ -63,14 +140,14 @@
 \begin{document}
 
 %% Title information
-\title[Short Title]{Full Title}         %% [Short Title] is optional;
+\title[Short Title]{Change-based Persistence}         %% [Short Title] is optional;
                                         %% when present, will be used in
                                         %% header instead of Full Title.
-\titlenote{with title note}             %% \titlenote is optional;
+%\titlenote{with title note}             %% \titlenote is optional;
                                         %% can be repeated if necessary;
                                         %% contents suppressed with 'anonymous'
-\subtitle{Subtitle}                     %% \subtitle is optional
-\subtitlenote{with subtitle note}       %% \subtitlenote is optional;
+%\subtitle{Subtitle}                     %% \subtitle is optional
+%\subtitlenote{with subtitle note}       %% \subtitlenote is optional;
                                         %% can be repeated if necessary;
                                         %% contents suppressed with 'anonymous'
 
@@ -86,84 +163,102 @@
 %% extraction tools.
 
 %% Author with single affiliation.
-\author{First1 Last1}
+\author{Alfa Yohannis}
 \authornote{with author1 note}          %% \authornote is optional;
                                         %% can be repeated if necessary
-\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
+\orcid{0000-0003-4425-3731}             %% \orcid is optional
 \affiliation{
-  \position{Position1}
-  \department{Department1}              %% \department is recommended
-  \institution{Institution1}            %% \institution is required
-  \streetaddress{Street1 Address1}
-  \city{City1}
-  \state{State1}
-  \postcode{Post-Code1}
-  \country{Country1}                    %% \country is recommended
+  \position{Research Student}
+  \department{Computer Science Department}              %% \department is recommended
+  \institution{University of York}            %% \institution is required
+  \streetaddress{Heslington East}
+  \city{York}
+  \state{North Yorkshire}
+  \postcode{YO10 5GE}
+  \country{United Kingdom}                    %% \country is recommended
 }
 \email{first1.last1@inst1.edu}          %% \email is recommended
 
-%% Author with two affiliations and emails.
-\author{First2 Last2}
-\authornote{with author2 note}          %% \authornote is optional;
-                                        %% can be repeated if necessary
-\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
 \affiliation{
-  \position{Position2a}
-  \department{Department2a}             %% \department is recommended
-  \institution{Institution2a}           %% \institution is required
-  \streetaddress{Street2a Address2a}
-  \city{City2a}
-  \state{State2a}
-  \postcode{Post-Code2a}
-  \country{Country2a}                   %% \country is recommended
+    \position{Research Student}
+    \department{Computer Science Department}              %% \department is recommended
+    \institution{Institut Teknologi dan Bisnis Kalbis}            %% \institution is required
+    \streetaddress{Jl. Pulomas Selatan kav.22}
+    \city{Jakarta Timur}
+    \state{DKI Jakarta}
+    \postcode{13210}
+    \country{Indonesia}                    %% \country is recommended
 }
-\email{first2.last2@inst2a.com}         %% \email is recommended
-\affiliation{
-  \position{Position2b}
-  \department{Department2b}             %% \department is recommended
-  \institution{Institution2b}           %% \institution is required
-  \streetaddress{Street3b Address2b}
-  \city{City2b}
-  \state{State2b}
-  \postcode{Post-Code2b}
-  \country{Country2b}                   %% \country is recommended
-}
-\email{first2.last2@inst2b.org}         %% \email is recommended
+\email{alfa.yohannis@kalbis.ac.id}          %% \email is recommended
+
+%%% Author with two affiliations and emails.
+%\author{First2 Last2}
+%\authornote{with author2 note}          %% \authornote is optional;
+%                                        %% can be repeated if necessary
+%\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
+%\affiliation{
+%  \position{Position2a}
+%  \department{Department2a}             %% \department is recommended
+%  \institution{Institution2a}           %% \institution is required
+%  \streetaddress{Street2a Address2a}
+%  \city{City2a}
+%  \state{State2a}
+%  \postcode{Post-Code2a}
+%  \country{Country2a}                   %% \country is recommended
+%}
+%\email{first2.last2@inst2a.com}         %% \email is recommended
+%\affiliation{
+%  \position{Position2b}
+%  \department{Department2b}             %% \department is recommended
+%  \institution{Institution2b}           %% \institution is required
+%  \streetaddress{Street3b Address2b}
+%  \city{City2b}
+%  \state{State2b}
+%  \postcode{Post-Code2b}
+%  \country{Country2b}                   %% \country is recommended
+%}
+%\email{first2.last2@inst2b.org}         %% \email is recommended
 
 
 %% Abstract
 %% Note: \begin{abstract}...\end{abstract} environment must come
 %% before \maketitle command
 \begin{abstract}
-Text of abstract \ldots.
+Change-based persistence has the potential to support faster and more accurate model comparison, merging, as well as a range of analytics activities. On the other hand, reconstructing the state of a model by replaying its editing history every time the model needs to be queried or modified can get increasingly expensive as the model grows in size. In this work, we integrate change-based and state-based persistence mechanisms in a hybrid model persistence approach that delivers the best of both worlds. In this paper, we present the design of our hybrid model persistence approach and report on its impact on time and memory footprint for model loading, saving, and storage space usage.
 \end{abstract}
 
 
 %% 2012 ACM Computing Classification System (CSS) concepts
 %% Generate at 'http://dl.acm.org/ccs/ccs.cfm'.
 \begin{CCSXML}
-<ccs2012>
-<concept>
-<concept_id>10011007.10011006.10011008</concept_id>
-<concept_desc>Software and its engineering~General programming languages</concept_desc>
-<concept_significance>500</concept_significance>
-</concept>
-<concept>
-<concept_id>10003456.10003457.10003521.10003525</concept_id>
-<concept_desc>Social and professional topics~History of programming languages</concept_desc>
-<concept_significance>300</concept_significance>
-</concept>
-</ccs2012>
+    <ccs2012>
+    <concept>
+    <concept_id>10011007.10010940.10010971.10010980.10010984</concept_id>
+    <concept_desc>Software and its engineering~Model-driven software engineering</concept_desc>
+    <concept_significance>500</concept_significance>
+    </concept>
+    <concept>
+    <concept_id>10011007.10010940.10011003.10011002</concept_id>
+    <concept_desc>Software and its engineering~Software performance</concept_desc>
+    <concept_significance>300</concept_significance>
+    </concept>
+    <concept>
+    <concept_id>10011007.10010940.10010971.10010972</concept_id>
+    <concept_desc>Software and its engineering~Software architectures</concept_desc>
+    <concept_significance>100</concept_significance>
+    </concept>
+    </ccs2012>
 \end{CCSXML}
 
-\ccsdesc[500]{Software and its engineering~General programming languages}
-\ccsdesc[300]{Social and professional topics~History of programming languages}
+\ccsdesc[500]{Software and its engineering~Model-driven software engineering}
+\ccsdesc[300]{Software and its engineering~Software performance}
+\ccsdesc[100]{Software and its engineering~Software architectures}
 %% End of generated code
 
 
 %% Keywords
 %% comma separated list
-\keywords{keyword1, keyword2, keyword3}  %% \keywords are mandatory in final camera-ready submission
+\keywords{change-based persistence, state-based persistence, model persistence, model comparison and merging}  %% \keywords are mandatory in final camera-ready submission
 
 
 %% \maketitle
@@ -173,32 +268,54 @@ Text of abstract \ldots.
 \maketitle
 
 
-\section{Introduction}
+\section{Introduction: Background, motivation, research problem}
+\label{ch:introduction}
 
-Text of paper \ldots
+Most of the models in the context of Model-Driven Engineering are persisted in state-based formats. In such approach, model files contain snapshots of the models' contents, and activities like version control and model comparison to support collaborative modelling are left to external systems such as file-based version-control systems and model differencing facilities. Activities such as change-detection (identifying parts that have changed in a model compared to a previous version) and model comparison (finding differences between models) are computationally consuming for state-based models \cite{Kolovos:2009:DMM:1564596.1564641}. Thus, a new approach is needed to make the computation more efficient.
+
+As an alternative to state-based persistence, this work proposes that a model can also be persisted in a change-based format, which persists the full sequence of \emph{changes} made to the model instead. The concept of change-based persistence is not new and has been used in persisting changes to software, object-oriented databases, and hierarchical documents \cite{DBLP:journals/entcs/RobbesL07,DBLP:conf/sde/LippeO92,DBLP:conf/caise/IgnatN05}. The change-based approach can improve detecting differences more precisely at the semantic level -- that is by providing finer-granularity information (e.g. types of changes, the order of the changes, elements that were changed, previous values, etc.) -- and therefore provide support to resolve them \cite{mens2002state}. The ordered nature of change-based persistence means that changes made to a model can be identified sequentially without having to explore and compare all elements between compared models. Based on these arguments, this work aims to answer this hypothesis, \textit{Change-based persistence reduces the execution time of model change-detection, model comparison, and model merging for large models compared to their execution time in state-based persistence, with acceptable trade-offs on loading and persisting time, memory footprint, and storage space consumption}. This work also explores the advantages and shortcomings of change-based persistence as an alternative approach to state-based persistence for models conforming to 3-layer metamodelling architectures such as EMF and MOF. Persisting models in a change-based format can bring a number of envisioned benefits over state-based persistence, such as the ability to detect changes much faster and more precisely, which can then have positive knock-on effects on supporting (1) developers compare and merge models in collaborative modelling environments, and (2) incremental model management (e.g. incremental query \cite{DBLP:conf/ecmdafa/RathHV12} and model-to-text transformation \cite{DBLP:conf/ecmdafa/OgunyomiRK15}). 
+
+Nevertheless, change-based persistence also comes with downsides, such as ever-growing model files \cite{DBLP:journals/entcs/RobbesL07,DBLP:conf/edoc/KoegelHLHD10} and increased model loading time \cite{mens2002state} which increase storage and computation costs. A model that is frequently modified will increase considerably in file size since every change is added to the file. The increased file size (proportional to the number of persisted changes) will, in turn, increase the loading time of the model since all changes have to be replayed to reconstruct the model's eventual state. These downsides have to be mitigated to enable the practical adoption of change-based persistence. One approach to reducing the file size of change-based models is by removing changes that do not affect the eventual state of the model. For the increased loading time, it can be mitigated by ignoring -- i.e. not replaying -- changes that are cancelled out by later changes or employing change-based and state-based persistence side-by-side so that the benefits of state-based persistence on loading time can be obtained. Other downsides are change-based persistence requires integration with existing tools -- since it is still a non-standard approach -- for its adoption \cite{koegel2010emfstore}, and still has limited support for standard, text-based version controls for collaborative development \cite{koegel2010emfstore}. These downsides can be addressed by developing a change-based persistence plugin for a specific development environment (e.g. Eclipse) and persisting changes in text-based format to support text-based version controls (e.g. Git, SVN).
+
+
+\section{Related Work}
+Compared to state-based persistence, instead of persisting states of models, change-based persistence persist the changes of models. This is feasible since modelling platforms (e.g. EMF) already provided notification facilities that inform changes of a model, instead of having to compare the model to its previous version to identify the differences. Th notification approach has been used in several incremental projects, such as IncQuery \cite{DBLP:conf/ecmdafa/RathHV12} and ReactiveATL \cite{DBLP:conf/ecmdafa/OgunyomiRK15}, while the model differencing approach has been provided by model differencing tools, such as SiDiff \cite{kelter2005generic} and EMF Compare \cite{eclipse2017compare}.
+
+Most of the available model persistence products persist models in state-based. For example, EMF persists models in a common standard XMI-formatted text file. EMF Teneo \cite{eclipse2017teneo} persists EMF models in relational databases, while Morsa \cite{DBLP:conf/models/Espinazo-PaganCM11} and NeoEMF \cite{daniel2016neoemf} persist models in document and graph databases, respectively. Regarding collaborative modelling, none of these state-based approaches provides built-in support for versioning and models are eventually stored in binary files/folders which are known to be a poor fit for text-oriented version control systems like Git and SVN. Connected Data Objects (CDO) \cite{eclipse2017cdo}, which provides support for database-backed model persistence, also provides collaboration facilities, but CDO adoption necessitates the use of a separate version control system (e.g. a Git repository for code and a CDO repository for models), which introduces fragmentation and administration challenges \cite{barmpis2014evaluation}. So far, this work only identified EMFStore \cite{koegel2010emfstore} as a product that persists models using change-based approach and uses its own model-specific version control system for collaborative modelling.
+
+While state-based approach offers some advantages compared to change-based approach, such as faster for loading large models \cite{DBLP:conf/models/Espinazo-PaganCM11,daniel2016neoemf}, supported by standard version controls (e.g. GitHub) \cite{koegel2010emfstore}, and a default standard (no need integration with existing tools) \cite{koegel2010emfstore}, it also has a drawback when it comes to model comparison: slower model comparison \cite{DBLP:conf/edoc/KoegelHLHD10} and less accurate since it does not carry more information \cite{mens2002state,DBLP:conf/edoc/KoegelHLHD10} compared to change-based approach. Change-based approach comes with some notable advantages over state-based approach, such as faster \cite{DBLP:conf/sde/LippeO92,DBLP:conf/caise/IgnatN05,DBLP:conf/edoc/KoegelHLHD10} and more accurate \cite{DBLP:journals/entcs/RobbesL07,DBLP:conf/sde/LippeO92,DBLP:conf/caise/IgnatN05,mens2002state} model comparison and merging, and information carried is useful for analytics \cite{DBLP:journals/entcs/RobbesL07}. However, it also comes with side effects, such as increased record size \cite{DBLP:journals/entcs/RobbesL07,DBLP:conf/edoc/KoegelHLHD10}, inefficient for replaying (loading) for long records \cite{mens2002state}, limited supports for standard, text-based version controls (e.g. GitHub) \cite{koegel2010emfstore}, and a non-standard approach (need integration with existing tools) \cite{koegel2010emfstore}.
+
+\section{Approach and Uniqueness}
+
+Make use of notification
+persist in text-based -> SVN
+Master version
+only changes are persisted into SVN
+local = change-baed vs state-based
+local-stated based are constructed using the change-based
+
+- Optimising saving and loading.
+- Hybrid model.
+- Using changes to identify differences at the structure level.
+
+
+\section{Results}
+
+\section{Conclusions and Future Works}
+State the contribtion here
+
+\cite{DBLP:conf/ecmdafa/RathHV12}.
+
 
 
 %% Acknowledgments
 \begin{acks}                            %% acks environment is optional
-                                        %% contents suppressed with 'anonymous'
-  %% Commands \grantsponsor{<sponsorID>}{<name>}{<url>} and
-  %% \grantnum[<url>]{<sponsorID>}{<number>} should be used to
-  %% acknowledge financial support and will be used by metadata
-  %% extraction tools.
-  This material is based upon work supported by the
-  \grantsponsor{GS100000001}{National Science
-    Foundation}{http://dx.doi.org/10.13039/100000001} under Grant
-  No.~\grantnum{GS100000001}{nnnnnnn} and Grant
-  No.~\grantnum{GS100000001}{mmmmmmm}.  Any opinions, findings, and
-  conclusions or recommendations expressed in this material are those
-  of the author and do not necessarily reflect the views of the
-  National Science Foundation.
+This work was partly supported by through a scholarship managed by \emph{Lembaga Pengelola Dana Pendidikan Indonesia} (Indonesia Endowment Fund for Education).
 \end{acks}
 
 
-%% Bibliography
-%\bibliography{bibfile}
-
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
 
 %% Appendix
 \appendix
