@@ -224,7 +224,7 @@
 %% Note: \begin{abstract}...\end{abstract} environment must come
 %% before \maketitle command
 \begin{abstract}
-Change-based persistence has the potential to support faster and more accurate model comparison, merging, as well as a range of analytics activities. On the other hand, reconstructing the state of a model by replaying its editing history every time the model needs to be queried or modified can get increasingly expensive as the model grows in size. In this work, we integrate change-based and state-based persistence mechanisms in a hybrid model persistence approach that delivers the best of both worlds. In this paper, we present the design of our hybrid model persistence approach and report on its impact on time and memory footprint for model loading, saving, and storage space usage.
+Change-based persistence has the potential to support faster and more accurate model comparison, merging, as well as a range of analytics activities compared to state-based persistence. However, it also comes with side-effects, such as the increased loading time and ever-growing file size. This paper presents our change-based persistence implementation as well as our solutions to reduce the side-effects. The evaluation results are also presented in this paper. 
 \end{abstract}
 
 
@@ -273,38 +273,291 @@ Change-based persistence has the potential to support faster and more accurate m
 
 Most of the models in the context of Model-Driven Engineering are persisted in state-based formats. In such approach, model files contain snapshots of the models' contents, and activities like version control and model comparison to support collaborative modelling are left to external systems such as file-based version-control systems and model differencing facilities. Activities such as change-detection (identifying parts that have changed in a model compared to a previous version) and model comparison (finding differences between models) are computationally consuming for state-based models \cite{Kolovos:2009:DMM:1564596.1564641}. Thus, a new approach is needed to make the computation more efficient.
 
-As an alternative to state-based persistence, this work proposes that a model can also be persisted in a change-based format, which persists the full sequence of \emph{changes} made to the model instead. The concept of change-based persistence is not new and has been used in persisting changes to software, object-oriented databases, and hierarchical documents \cite{DBLP:journals/entcs/RobbesL07,DBLP:conf/sde/LippeO92,DBLP:conf/caise/IgnatN05}. The change-based approach can improve detecting differences more precisely at the semantic level -- that is by providing finer-granularity information (e.g. types of changes, the order of the changes, elements that were changed, previous values, etc.) -- and therefore provide support to resolve them \cite{mens2002state}. The ordered nature of change-based persistence means that changes made to a model can be identified sequentially without having to explore and compare all elements between compared models. Based on these arguments, this work aims to answer this hypothesis, \textit{Change-based persistence reduces the execution time of model change-detection, model comparison, and model merging for large models compared to their execution time in state-based persistence, with acceptable trade-offs on loading and persisting time, memory footprint, and storage space consumption}. This work also explores the advantages and shortcomings of change-based persistence as an alternative approach to state-based persistence for models conforming to 3-layer metamodelling architectures such as EMF and MOF. Persisting models in a change-based format can bring a number of envisioned benefits over state-based persistence, such as the ability to detect changes much faster and more precisely, which can then have positive knock-on effects on supporting (1) developers compare and merge models in collaborative modelling environments, and (2) incremental model management (e.g. incremental query \cite{DBLP:conf/ecmdafa/RathHV12} and model-to-text transformation \cite{DBLP:conf/ecmdafa/OgunyomiRK15}). 
+As an alternative to state-based persistence (SBP), this work proposes that a model can also be persisted in a change-based format, which persists the full sequence of \emph{changes} made to the model instead. The concept of change-based persistence (CBP) is not new and has been used in persisting changes to software, object-oriented databases, and hierarchical documents \cite{DBLP:journals/entcs/RobbesL07,DBLP:conf/sde/LippeO92,DBLP:conf/caise/IgnatN05}. The change-based approach can improve detecting differences more precisely at the semantic level -- that is by providing finer-granularity information (e.g. types of changes, the order of the changes, elements that were changed, previous values, etc.) -- and therefore provide support to resolve them \cite{mens2002state}. The ordered nature of CBP means that changes made to a model can be identified sequentially without having to explore and compare all elements between compared models. Based on these arguments, this work aims to answer this hypothesis, \textit{Change-based persistence reduces the execution time of model change-detection, model comparison, and model merging for large models compared to their execution time in CBP, with acceptable trade-offs on loading and persisting time, memory footprint, and storage space consumption}. This work also explores the advantages and shortcomings of CBP as an alternative approach to CBP for models conforming to 3-layer metamodelling architectures such as EMF and MOF. Persisting models in a change-based format can bring a number of envisioned benefits over CBP, such as the ability to detect changes much faster and more precisely, which can then have positive knock-on effects on supporting (1) developers compare and merge models in collaborative modelling environments, and (2) incremental model management (e.g. incremental query \cite{DBLP:conf/ecmdafa/RathHV12} and model-to-text transformation \cite{DBLP:conf/ecmdafa/OgunyomiRK15}). 
 
-Nevertheless, change-based persistence also comes with downsides, such as ever-growing model files \cite{DBLP:journals/entcs/RobbesL07,DBLP:conf/edoc/KoegelHLHD10} and increased model loading time \cite{mens2002state} which increase storage and computation costs. A model that is frequently modified will increase considerably in file size since every change is added to the file. The increased file size (proportional to the number of persisted changes) will, in turn, increase the loading time of the model since all changes have to be replayed to reconstruct the model's eventual state. These downsides have to be mitigated to enable the practical adoption of change-based persistence. One approach to reducing the file size of change-based models is by removing changes that do not affect the eventual state of the model. For the increased loading time, it can be mitigated by ignoring -- i.e. not replaying -- changes that are cancelled out by later changes or employing change-based and state-based persistence side-by-side so that the benefits of state-based persistence on loading time can be obtained. Other downsides are change-based persistence requires integration with existing tools -- since it is still a non-standard approach -- for its adoption \cite{koegel2010emfstore}, and still has limited support for standard, text-based version controls for collaborative development \cite{koegel2010emfstore}. These downsides can be addressed by developing a change-based persistence plugin for a specific development environment (e.g. Eclipse) and persisting changes in text-based format to support text-based version controls (e.g. Git, SVN).
+Nevertheless, CBP also comes with downsides, such as ever-growing model files \cite{DBLP:journals/entcs/RobbesL07,DBLP:conf/edoc/KoegelHLHD10} and increased model loading time \cite{mens2002state} which increase storage and computation costs. A model that is frequently modified will increase considerably in file size since every change is added to the file. The increased file size (proportional to the number of persisted changes) will, in turn, increase the loading time of the model since all changes have to be replayed to reconstruct the model's eventual state. These downsides have to be mitigated to enable the practical adoption of CBP. One approach to reducing the file size of change-based models is by removing changes that do not affect the eventual state of the model. For the increased loading time, it can be mitigated by ignoring -- i.e. not replaying -- changes that are cancelled out by later changes or employing change-based and CBP side-by-side so that the benefits of CBP on loading time can be obtained. Other downsides are CBP requires integration with existing tools -- since it is still a non-standard approach -- for its adoption \cite{koegel2010emfstore}, and still has limited support for standard, text-based version controls for collaborative development \cite{koegel2010emfstore}. These downsides can be addressed by developing a CBP plugin for a specific development environment (e.g. Eclipse) and persisting changes in text-based format to support text-based version controls (e.g. Git, SVN).
 
 
 \section{Related Work}
-Compared to state-based persistence, instead of persisting states of models, change-based persistence persist the changes of models. This is feasible since modelling platforms (e.g. EMF) already provided notification facilities that inform changes of a model, instead of having to compare the model to its previous version to identify the differences. Th notification approach has been used in several incremental projects, such as IncQuery \cite{DBLP:conf/ecmdafa/RathHV12} and ReactiveATL \cite{DBLP:conf/ecmdafa/OgunyomiRK15}, while the model differencing approach has been provided by model differencing tools, such as SiDiff \cite{kelter2005generic} and EMF Compare \cite{eclipse2017compare}.
+Compared to CBP, instead of persisting states of models, CBP persist the changes of models. This is feasible since modelling platforms (e.g. EMF) already provided notification facilities that inform changes of a model, instead of having to compare the model to its previous version to identify the differences. Th notification approach has been used in several incremental projects, such as IncQuery \cite{DBLP:conf/ecmdafa/RathHV12} and ReactiveATL \cite{DBLP:conf/ecmdafa/OgunyomiRK15}, while the model differencing approach has been provided by model differencing tools, such as SiDiff \cite{kelter2005generic} and EMF Compare \cite{eclipse2017compare}.
 
 Most of the available model persistence products persist models in state-based. For example, EMF persists models in a common standard XMI-formatted text file. EMF Teneo \cite{eclipse2017teneo} persists EMF models in relational databases, while Morsa \cite{DBLP:conf/models/Espinazo-PaganCM11} and NeoEMF \cite{daniel2016neoemf} persist models in document and graph databases, respectively. Regarding collaborative modelling, none of these state-based approaches provides built-in support for versioning and models are eventually stored in binary files/folders which are known to be a poor fit for text-oriented version control systems like Git and SVN. Connected Data Objects (CDO) \cite{eclipse2017cdo}, which provides support for database-backed model persistence, also provides collaboration facilities, but CDO adoption necessitates the use of a separate version control system (e.g. a Git repository for code and a CDO repository for models), which introduces fragmentation and administration challenges \cite{barmpis2014evaluation}. So far, this work only identified EMFStore \cite{koegel2010emfstore} as a product that persists models using change-based approach and uses its own model-specific version control system for collaborative modelling.
 
 While state-based approach offers some advantages compared to change-based approach, such as faster for loading large models \cite{DBLP:conf/models/Espinazo-PaganCM11,daniel2016neoemf}, supported by standard version controls (e.g. GitHub) \cite{koegel2010emfstore}, and a default standard (no need integration with existing tools) \cite{koegel2010emfstore}, it also has a drawback when it comes to model comparison: slower model comparison \cite{DBLP:conf/edoc/KoegelHLHD10} and less accurate since it does not carry more information \cite{mens2002state,DBLP:conf/edoc/KoegelHLHD10} compared to change-based approach. Change-based approach comes with some notable advantages over state-based approach, such as faster \cite{DBLP:conf/sde/LippeO92,DBLP:conf/caise/IgnatN05,DBLP:conf/edoc/KoegelHLHD10} and more accurate \cite{DBLP:journals/entcs/RobbesL07,DBLP:conf/sde/LippeO92,DBLP:conf/caise/IgnatN05,mens2002state} model comparison and merging, and information carried is useful for analytics \cite{DBLP:journals/entcs/RobbesL07}. However, it also comes with side effects, such as increased record size \cite{DBLP:journals/entcs/RobbesL07,DBLP:conf/edoc/KoegelHLHD10}, inefficient for replaying (loading) for long records \cite{mens2002state}, limited supports for standard, text-based version controls (e.g. GitHub) \cite{koegel2010emfstore}, and a non-standard approach (need integration with existing tools) \cite{koegel2010emfstore}.
 
-\section{Approach and Uniqueness}
+\section{Approach}
 
-Make use of notification
-persist in text-based -> SVN
-Master version
-only changes are persisted into SVN
-local = change-baed vs state-based
-local-stated based are constructed using the change-based
+\subsection{Change-based Persistence}
+To explain the differences between CBP and CBP, consider a modelling activity on a UML model as presented Fig. \ref{fig:illustration_cbp}. The sub-figures \ref{fig:illustration_3} to \ref{fig:illustration_8} depict the evolution of a UML model at different time stamps. Classes are created and added/removed from \texttt{Package X}. In CBP, only the final state of the model is persisted. Thus, to represent the final state of the UML model, only the information about \texttt{Package X} and \texttt{Class C} needs to be persisted, as presented in Listing \ref{lst:xmimodel2} (XMI format). In CBP all the changes in the model are persisted. Thus, a list of all the events generated along the modification of the model is needed to represent the final state of the model.
 
-- Optimising saving and loading.
-- Hybrid model.
-- Using changes to identify differences at the structure level.
+\begin{figure}[t]
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/illustration_3}
+        \caption{Time stamp 1}
+        \label{fig:illustration_3}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/illustration_4}
+        \caption{Time stamp 2}
+        \label{fig:illustration_4}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/illustration_5}
+        \caption{Time stamp 3}
+        \label{fig:illustration_5}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/illustration_6}
+        \caption{Time stamp 4}
+        \label{fig:illustration_6}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/illustration_7}
+        \caption{Time stamp 5}
+        \label{fig:illustration_7}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/illustration_8}
+        \caption{Time stamp 6}
+        \label{fig:illustration_8}
+    \end{subfigure}
+    
+    \caption{The states of the example model after certain changes and their corresponding lines in Listing \ref{lst:cbpmodel}.}
+    \label{fig:illustration_cbp}
+\end{figure}
+
+A session depicts a set of changes made between $save$ events, i.e. a session comprises all the changes that happened since the last time that the model was persisted. The CBP representation is shown in Listing \ref{lst:cbpmodel}. Lines 1-7 represent the initial state (Fig. \ref{fig:illustration_3}), followed by lines 8 (Fig. \ref{fig:illustration_4}), 9 (Fig. \ref{fig:illustration_5}), 11 (Fig. \ref{fig:illustration_6}), 12 (Fig. \ref{fig:illustration_7}), and 13 (Fig. \ref{fig:illustration_8}). We use a natural language pseudo-code for CBP introduced in \cite{DBLP:conf/models/YohannisKP17,yohannis2018towards} in Listing \ref{lst:cbpmodel}. The actual implementation is in the XML-like format \cite{DBLP:conf/models/YohannisKP17}, and the technical implementation (i.e. software architecture) of the CBP is described in \cite{DBLP:conf/models/YohannisKP17}.  We can also use similar approach to reduce the file size of a change-based model so that it contains only effective events -- in a consequence that we lost the overall course of events on how the model was constructed.
+
+\begin{lstlisting}[style=xmi,caption={The second version of the UML2 example model.},label=lst:xmimodel2]
+<uml:Package xmi:id="1" name="X">
+<packagedElement xsi:type="uml:Class" 
+    xmi:id="3" name="C"/>
+</uml:Package>
+\end{lstlisting}
+
+\begin{lstlisting}[style=eol,caption={The text CBP of producing state-based model in List. \ref{lst:xmimodel2}. Its visual illustration is in Fig. \ref{fig:illustration_cbp}.},label=lst:cbpmodel]
+session 1
+create p1 type Package
+set p1.name to "X" 
+create c1 type Class
+set c1.name to "A"
+create c2 type Class
+set c2.name to "B"
+add c1 to p1.packagedElement 
+add c2 to p1.packagedElement
+session 2
+set c2.name to "C"
+remove c1 from p1.children 
+delete c1
+\end{lstlisting}
+
+\subsection{Loading and File-size Optimisation}
+CBP comes with drawbacks on the increasing loading time and ever-growing file size as introduced previously. The increasing loading time can be reduced by ignoring preceding events that have been cancelled out by later events when loading a CBP model. They can be ignored since they do not affect the eventual state of the model. As an example, in List. \ref{lst:cbpmodel}, line 7 is cancelled by line 11 since setting the $c1$.$name$ firstly to ``A'' does not affect to the eventual state of the $c1$.$name$, which is ``C'', which is set effectively only by executing line 11. Lines 4, 5, 8, 12, and 13 are cancelled by line 13 since replaying these events is not effective as the object c1 that these events modify does not exist any more in the eventual state of the model. The technical implementation of this approach is described in more detail in \cite{yohannis2018towards}.
+
+\begin{lstlisting}[style=eol,caption={The optimised version of the CBP in List. \ref{lst:cbpmodel}.},label=lst:cbpmodel_optimised]
+session 1
+create p1 type Package
+set p1.name to "X" 
+create c1 type Class         // cancelled by line 13
+set c1.name to "A"           // cancelled by line 13
+create c2 type Class
+set c2.name to "B"           // cancelled by line 11
+add c1 to p1.packagedElement // cancelled by line 13
+add c2 to p1.packagedElement
+session 2
+set c2.name to "C"
+remove c1 from p1.children   // cancelled by line 13  
+delete c1                    // cancel itself
+\end{lstlisting}
 
 
-\section{Results}
+
+\subsection{Hybrid Persistence}
+\label{sec:hybrid_model_persistence}
+ Loading times can be reduced by around 50\% by processing the changelog, detecting, memorising and subsequently ignoring change events that have no impact to the final state of the model, but are still substantially longer -- more than 6.4 times slower and even longer as the persisted changes increase -- than loading times for state-based approaches \cite{yohannis2018towards}. Table \ref{table:persistence_comparsion} summarises the benefits (+) and drawbacks (-) of change and state-based model persistence.
+
+\begin{figure}[ht]
+    \begin{small}
+        \caption{Comparison of model persistence approaches between change-based, state-based 
+           , and hybrid persistence.}
+        \label{table:persistence_comparsion}
+        \begin{tabular}{ c c c c }
+            \hline 
+            \textbf{Dimensions} & \textbf{Change-based} & \textbf{State-based*} & \textbf{Hybrid} \\ 
+            \hline 
+            Load Time & $-$ & $+$ & $+^{**}$ \\
+            Save Time & $+$ & $+$ & $+^{**}$ \\
+            Comparison Time & $+$ & $-$ & $+$ \\
+            Storage Space & $-$ & $+$ & $-$ \\
+            \hline 
+        \end{tabular}
+        $^*$using NoSQL backend for partial loading and saving\\$^{**}$insignificantly slower than CBP and SBP
+    \end{small}
+\end{figure}
+
+To achieve the best of both worlds we introduce a hybrid model persistence approach which combines change-based and state-based model persistence, to work together side-by-side. An overview of the proposed approach is illustrated in Fig. \ref{fig:hybrid_persistence}. In the proposed approach a \textit{hybrid} model is stored in two representations at the same time: a change-based (e.g. using CBP) and a state-based representation (e.g. using XMI or a database-backed approach such as NeoEMF). The change-based representation is the source of truth. The state-based representation can be fully derived from the change-based representation.
+
+\begin{figure}[ht]
+    \includegraphics[width=\linewidth]{images/hybrid_persistence}
+    \caption{The mechanism of hybrid model persistence.}
+    \label{fig:hybrid_persistence}
+\end{figure}
+
+\paragraph{Loading a hybrid model} Models are loaded into in-memory object graphs that clients (e.g. editors, transformations) can then interact with\footnote{Depending on the state persistence mechanism, the object graph may be loaded in its entirety at startup (e.g. XMI) or loaded progressively, in a lazy manner (e.g. NeoEMF/CDO)}. In the proposed hybrid approach, if the state-based counterpart already exists, the in-memory object graph is populated from it; otherwise, it is populated by replaying the complete editing history recorded in the change-based representation.
+
+\paragraph{Changing a hybrid model} When an element in a loaded model is created, modified or deleted, the change is applied to the in-memory object graph and is also recorded in an in-memory list of changes (\textit{Editing session changes} in Fig 2). We use the term \emph{editing session} for the period between loading a model and saving back to disk. 
+
+\paragraph{Saving a hybrid model} The current version of the in-memory object graph is stored in the preferred state-based representation. The list of changes recorded in the current editing session (with optional processing, as described above) is appended to the change-based representation.
+
+\paragraph{Versioning a hybrid model} Since the state-based representation is fully derived from the change-based representation, if a model needs to be versioned (e.g. in a Git repository), only the change-based representation needs to be stored. The first time it is loaded after being checked out/cloned, the state-based representation is computed and persisted locally and is used in subsequent model loading steps.
+
+\paragraph{Comparing hybrid models} To compare two hybrid models, their change-based representations are used: this is much more efficient than state-based comparison as demonstrated in Section \ref{sec:identifying_deleted_elements}.
+
+%\subsection{Change-based Comparison}
+%persist in text-based -> SVN
+%Master version
+%only changes are persisted into SVN
+%local = change-baed vs state-based
+%local-stated based are constructed using the change-based
+%
+%- Optimising saving and loading.
+%- Hybrid model.
+%- Using changes to identify differences at the structure level.
+
+
+\section{Evaluation}
+
+\subsection{Saving Time and Memory}
+
+between original CBP (CBP), optimised CBP (OCBP), and XMI
+
+\begin{table}[ht]
+    \footnotesize
+    \centering
+    \caption{The t-test results of saving time and memory footprint comparison after saving an event.}
+    \label{table:ttest_results_savetime}
+    \begin{tabular}
+        {| c c c | c c c c |}
+        \hline 
+        Group & Mean & SD & Comparison & t  & df & p-value \\  
+        \hline 
+        \multicolumn{7}{|c|}{Saving Time} \\
+        \hline
+        CBP & 0.00069    & 3.4e-5 & \multirow{2}{*}{CBP vs XMI} & \multirow{2}{*}{-6.01}   & \multirow{2}{*}{21.00} & \multirow{2}{*}{$<$ 0.05} \\
+        XMI & 0.40025   & 595e-5 &  &   &   &  \\ 
+        \hline
+        \multicolumn{7}{|c|}{Saving Memory Footprint} \\
+        \hline 
+        CBP & 0.0025    & 18.8e-6 &  \multirow{2}{*}{CBP vs XMI} & \multirow{2}{*}{-4.3e\texttt{+}6} & \multirow{2}{*}{21.00} & \multirow{2}{*}{$<$ 0.05} \\
+        XMI & 17.61   & 2.4e-6 &  &  &  &  \\ 
+        \hline 
+        \hline 
+    \end{tabular}
+$Mean$ = average, $SD$ = standard deviation, $t$ = t-test's $t$-$value$, $df$ = degree of freedom, $p$-$value$ = significance, $s$ = the unit is seconds
+\end{table}
+
+\subsection{Loading Optimisation}
+
+original CBP (CBP), optimised CBP (OCBP), and XMI
+$Mean$ = average, $SD$ = standard deviation, $t$ = t-test's $t$-$value$, $df$ = degree of freedom, $p$-$value$ = significance, $s$ = the unit is seconds
+\begin{table}[ht]
+    \footnotesize
+    \centering
+    \caption{The t-test results of loading time and memory footprint comparison after loading a model.}
+    \label{table:ttest_results_loadtime}
+    \begin{tabular}
+        {| c c c | c c c c |}
+        \hline 
+        Group & Mean & SD & Comparison & t  & df & p-value \\  
+         \hline 
+        \multicolumn{7}{|c|}{Loading Time} \\
+        \hline
+        CBP & 16.60    & 0.23 &  CBP vs XMI & 324.18   &22.78 & $<$ 0.05 \\
+        OCBP &  8.28  &  0.09 & CBP vs OCBP & 160.06 & 27.48 & $<$ 0.05 \\  
+        XMI & 0.60   & 0.05 & OCBP vs XMI & 354.52   &42.06  & $<$ 0.05 \\ 
+        \hline 
+        \multicolumn{7}{|c|}{Loading Memory Footprint} \\
+        \hline
+        CBP &15.74    & 1.248 &  CBP vs XMI & 28.16   &  41.99 & $<$ 0.05 \\
+        OCBP & 43.15   & 0.056 & CBP vs OCBP & -102.9 &21.08 & $<$ 0.05 \\  
+        XMI & 5.05   & 1.271 & OCBP vs XMI & 140.49  & 21.08  & $<$ 0.05 \\ 
+        \hline 
+    \end{tabular}
+\end{table}
+
+
+\subsection{Hybrid Persistence}
+We evaluated the performance of our hybrid persistence prototype against SBP (with NeoEMF backend) regarding time, memory footprint, storage space for loading and saving. W used the nonparametric Mann-Whitney U test with a significance level of 5\%. The model used for this evaluation was reverse-engineered from the Epsilon project. The models consist of 4.3 million change-based events and 88,020 model elements. The size of its change-based file is 406 MBs and  188 MBs for its NeoEMF backend.
+
+As can be noticed in Table \ref{table:time_memory_footprint}, the hybrid persistence experiences a slight slowdown on loading and saving time (hybrid approach's $mean$ $>$ state-based approach's $mean$). However, the slowdown is not significant, which means that side-effect of the hybrid approach on loading and saving time is still acceptable. The hybrid approach also produces more memory footprint compared to the state-based-only approach. Nevertheless, considering the cost of main memory, this condition is acceptable in almost all real-world scenarios. The last row of the table derives an average space usage per element (for the SBP) or event (for the CBP). We can estimate the storage space usage for a hybrid persistence to be the combination of CBP and the appropriate SBP space usage.
+
+\begin{table}[ht]
+    \centering
+    \begin{footnotesize}
+        \caption{The comparison on time, memory footprint, and storage space for loading and saving models of the hybrid and state-based-only persistence (NeoEMF backend).}
+        \label{table:time_memory_footprint}
+        \begin{tabular}{ | c | c | c | c | c | c | c | c | c | }
+            \hline
+            \textbf{Dimension} & \multicolumn{2}{c|}{\textbf{Hybrid}} & \multicolumn{2}{c|}{\textbf{State-based}} & \multicolumn{2}{c|}{\textbf{Significance}} \\
+            \hhline{~------}
+            & $mean$ & $sd$ & $mean$ & $sd$ &  $W$ & $p$-$value$ \\
+            \hline
+            \makecell{Load Time} & 0.292 & 0.061 & 0.279 & 0.023 & 258 & \textbf{0.72}\\ 
+            \hline
+            \makecell{Save Time} & 0.0892 & 0.0421 & 0.0829 & 0.0494 & 216 & \textbf{0.55}\\ 
+            \hline
+            \makecell{Load Memory} & 38.601 & 0.878 & 10.014 & 1.088 & 0 & $<$ 0.05\\ 
+            \hline
+            \makecell{Save Memory} & 2.64 & 1.29 & 2.61 & 0.78 & 283 & \textbf{0.34}\\ 
+            \hline
+            \makecell{Storage Space} & \multicolumn{2}{c|}{\makecell{2 KBs/element\\+ 98 bytes/event}} & \multicolumn{2}{c|}{2 KBs/element} & \multicolumn{2}{c|}{---} \\ 
+            \hline
+        \end{tabular}
+        \justify
+        The time is in seconds, and the memory footprint is in MBs.
+    \end{footnotesize}
+\end{table}
+
+\subsection{Identifying Deleted Elements}
+\label{sec:identifying_deleted_elements}
+In this section, we present the evaluation of CBP in detecting changes of models. As the scenario for the evaluation, we identify the elements in the older model that have been deleted in the newer model. We have generated a dataset of UML2 models comprises hybrid models which are reverse-engineered from the commits number 8, 44, 181, and 388 of the Epsilon project on GitHub. The description of the models can be found in Table \ref{table:version_description}.
+
+\begin{table}[ht]
+    \centering
+    \caption{Description of version 8, 44, 181, and 388 of the Epsilon project's UML2 model.}
+    \label{table:version_description}
+    \begin{tabular}{ r r r r r}
+        \hline 
+        \textbf{\thead{Versions}} & \textbf{\thead{Element\\Counts}} & \textbf{\thead{Delta Elements\\(from ver. 8)}} & \textbf{\thead{Event\\Counts}} & \textbf{\thead{Delta Events\\(from ver. 8)}} \\
+        \hline 
+        008	& 25,993 & 0	& 90,888 & 0\\
+        044	& 31,240 & 5,247	& 166,659 & 75,771\\
+        181	& 34,196 & 8,203	& 250,073 & 159,185\\
+        388	& 48,482 & 22,489 & 332,315 & 241,427\\
+        \hline 
+    \end{tabular}
+\end{table}
+
+We compare the performance between identifying the deleted elements by iterating through each events of the change-based persistence (\emph{the hybrid method}) and performing a state-based model comparison between the two compared versions using EMF Compare (\emph{the state-based method}).  As can be noticed in Fig. \ref{fig:delete_detection_epsilon_average}, identifying the deleted elements using the hybrid method is faster than the state-based method particularly when the models grows -- increase in version number, number of elements (model size), and  number of events (editing size). The change identification time of the hybrid method tends to grow linearly as the number of events increases, whereas the stated-based method tends to grow exponentially as the number of elements increases (Table \ref{table:version_description}).
+
+\begin{figure}
+    \includegraphics[width=\linewidth]{images/delete_detection_epsilon_average}
+    \caption{The time required for hybrid and state-based methods on detecting deleted elements in newer versions.}
+    \label{fig:delete_detection_epsilon_average}
+\end{figure}
 
 \section{Conclusions and Future Works}
-State the contribtion here
+In this paper, we have proposed This paper presents our CBP implementation as well as our solutions to reduce the side-effects CBP. Based on the evaluation results, the hybrid model persistence provides benefits on model loading time and change detection with an acceptable trade-off on memory footprint and storage space usage. 
 
-\cite{DBLP:conf/ecmdafa/RathHV12}.
+Currently, we are still working on the hybrid model comparison (Section \ref{sec:hybrid_model_persistence} -- Comparing hybrid models). So far, the progress is promising. Based on our preliminary investigation, it can detect atomic changes of models faster than state-based model comparison, e.g. detecting elements that have been removed from older versions. In the future, we plan to evaluate hybrid model persistence on even larger models and perform experiments where software modellers are asked to construct change-based models. We also plan to develop a solution for the efficient merging of change-based and hybrid models. 
 
 
 
@@ -316,11 +569,5 @@ This work was partly supported by through a scholarship managed by \emph{Lembaga
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
-
-%% Appendix
-\appendix
-\section{Appendix}
-
-Text of appendix \ldots
 
 \end{document}
